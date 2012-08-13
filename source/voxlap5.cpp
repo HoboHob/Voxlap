@@ -10020,35 +10020,10 @@ static void updatereflects (vx5sprite *spr)
 		if (i > 2047) i = 2047;
 		fogmul = foglut[i];
 
-	#ifdef NOASM
 		i = (long)(*(short *)&fogmul);
 		((short *)kv6coladd)[0] = (short)((((long)(((short *)&fogcol)[0]))*i)>>1);
 		((short *)kv6coladd)[1] = (short)((((long)(((short *)&fogcol)[1]))*i)>>1);
 		((short *)kv6coladd)[2] = (short)((((long)(((short *)&fogcol)[2]))*i)>>1);
-	#else
-		#ifdef __GNUC__ //gcc inline asm
-		__asm__ __volatile__
-		(
-			".intel_syntax noprefix\n"
-			"movq	mm0, fogcol\n"
-			"paddd	mm0, mm0\n"
-			"pmulhuw	mm0, fogmul\n"
-			"movq	kv6coladd[0], mm0\n"
-			"emms\n"
-			".att_syntax prefix\n"
-		);
-		#endif
-		#ifdef _MSC_VER //msvc inline asm
-		_asm
-		{
-			movq	mm0, fogcol
-			paddd	mm0, mm0
-			pmulhuw	mm0, fogmul
-			movq	kv6coladd[0], mm0
-			emms
-		}
-		#endif
-	#endif
 	}
 	else
 	{
