@@ -10052,8 +10052,6 @@ static void updatereflects (vx5sprite *spr)
 		tp.y = spr->h.x*fx + spr->h.y*fy + spr->h.z*fz;
 		tp.z = spr->f.x*fx + spr->f.y*fy + spr->f.z*fz;
 
-		f = 64.0 / sqrt(tp.x*tp.x + tp.y*tp.y + tp.z*tp.z);
-		#ifdef NOASM
 		for(i=255;i>=0;i--)
 		{
 		   ftol(univec[i].x*tp.x + univec[i].y*tp.y + univec[i].z*tp.z,&j);
@@ -10062,126 +10060,6 @@ static void updatereflects (vx5sprite *spr)
 		   ((unsigned short *)(&kv6colmul[i]))[1] = j;
 		   ((unsigned short *)(&kv6colmul[i]))[2] = j;
 		}
-		#else
-		g = ((float)((((long)fogmul)&32767)^32767))*(16.f*8.f/65536.f);
-		if (!(((vx5.kv6col&0xffff)<<8)^(vx5.kv6col&0xffff00))) //Cool way to check if R==G==B :)
-		{
-			g *= ((float)(vx5.kv6col&255))/256.f;
-				//This case saves 1 MMX multiply per iteration
-			f *= g;
-			lightlist[0][0] = (short)(tp.x*f);
-			lightlist[0][1] = (short)(tp.y*f);
-			lightlist[0][2] = (short)(tp.z*f);
-			lightlist[0][3] = (short)(g*128.f);
-			#ifdef __GNUC__ //gcc inline asm
-			__asm__ __volatile__
-			(
-				".intel_syntax noprefix\n"
-				"movq	mm6, lightlist[0]\n"
-				"mov	ecx, 255*8\n"
-			".Lnolighta:\n"
-				"movq	mm0, iunivec[ecx]\n"
-				"movq	mm1, iunivec[ecx-8]\n"
-				"pmaddwd	mm0, mm6\n" //mm0: [tp.a*iunivec.a + tp.z*iunivec.z][tp.y*iunivec.y + tp.x*iunivec.x]
-				"pmaddwd	mm1, mm6\n"
-				"pshufw	mm2, mm0, 0x4e\n"  //Before: mm0: [ 0 ][ a ][   ][   ][ 0 ][ b ][   ][   ]
-				"pshufw	mm3, mm1, 0x4e\n"
-				"paddd	mm0, mm2\n"
-				"paddd	mm1, mm3\n"
-				"pshufw	mm0, mm0, 0x55\n"
-				"pshufw	mm1, mm1, 0x55\n"  //After:  mm0: [   ][   ][   ][a+b][   ][a+b][   ][a+b]
-				"movq	kv6colmul[ecx], mm0\n"
-				"movq	kv6colmul[ecx-8], mm1\n"
-				"sub	ecx, 2*8\n"
-				"jnc	short .Lnolighta\n"
-				".att_syntax prefix\n"
-			);
-			#endif
-			#ifdef _MSC_VER //msvc inline asm
-			_asm
-			{
-				movq	mm6, lightlist[0]
-				mov	ecx, 255*8
-			nolighta:
-				movq	mm0, iunivec[ecx]
-				movq	mm1, iunivec[ecx-8]
-				pmaddwd	mm0, mm6 //mm0: [tp.a*iunivec.a + tp.z*iunivec.z][tp.y*iunivec.y + tp.x*iunivec.x]
-				pmaddwd	mm1, mm6
-				pshufw	mm2, mm0, 0x4e  //Before: mm0: [ 0 ][ a ][   ][   ][ 0 ][ b ][   ][   ]
-				pshufw	mm3, mm1, 0x4e
-				paddd	mm0, mm2
-				paddd	mm1, mm3
-				pshufw	mm0, mm0, 0x55
-				pshufw	mm1, mm1, 0x55  //After:  mm0: [   ][   ][   ][a+b][   ][a+b][   ][a+b]
-				movq	kv6colmul[ecx], mm0
-				movq	kv6colmul[ecx-8], mm1
-				sub	ecx, 2*8
-				jnc	short nolighta
-			}
-			#endif
-		}
-		else
-		{
-			f *= g;
-			lightlist[0][0] = (short)(tp.x*f);
-			lightlist[0][1] = (short)(tp.y*f);
-			lightlist[0][2] = (short)(tp.z*f);
-			lightlist[0][3] = (short)(g*128.f);
-			#ifdef __GNUC__ //gcc inline asm
-			__asm__ __volatile__
-			(
-				".intel_syntax noprefix\n"
-				"punpcklbw	mm5, vx5.kv6col\n"
-				"movq	mm6, lightlist[0]\n"
-				"mov	ecx, 255*8\n"
-			".Lnolightb:\n"
-				"movq	mm0, iunivec[ecx]\n"
-				"movq	mm1, iunivec[ecx-8]\n"
-				"pmaddwd	mm0, mm6\n" //mm0: [tp.a*iunivec.a + tp.z*iunivec.z][tp.y*iunivec.y + tp.x*iunivec.x]
-				"pmaddwd	mm1, mm6\n"
-				"pshufw	mm2, mm0, 0x4e\n" //Before: mm0: [ 0 ][ a ][   ][   ][ 0 ][ b ][   ][   ]
-				"pshufw	mm3, mm1, 0x4e\n"
-				"paddd	mm0, mm2\n"
-				"paddd	mm1, mm3\n"
-				"pshufw	mm0, mm0, 0x55\n"
-				"pshufw	mm1, mm1, 0x55\n" //After:  mm0: [   ][   ][   ][a+b][   ][a+b][   ][a+b]
-				"pmulhuw	mm0, mm5\n"
-				"pmulhuw	mm1, mm5\n"
-				"movq	kv6colmul[ecx], mm0\n"
-				"movq	kv6colmul[ecx-8], mm1\n"
-				"sub	ecx, 2*8\n"
-				"jnc short .Lnolightb\n"
-				".att_syntax prefix\n"
-			);
-			#endif
-			#ifdef _MSC_VER //msvc inline asm
-			_asm
-			{
-				punpcklbw	mm5, vx5.kv6col
-				movq	mm6, lightlist[0]
-				mov	ecx, 255*8
-			nolightb:
-				movq	mm0, iunivec[ecx]
-				movq	mm1, iunivec[ecx-8]
-				pmaddwd	mm0, mm6 //mm0: [tp.a*iunivec.a + tp.z*iunivec.z][tp.y*iunivec.y + tp.x*iunivec.x]
-				pmaddwd	mm1, mm6
-				pshufw	mm2, mm0, 0x4e //Before: mm0: [ 0 ][ a ][   ][   ][ 0 ][ b ][   ][   ]
-				pshufw	mm3, mm1, 0x4e
-				paddd	mm0, mm2
-				paddd	mm1, mm3
-				pshufw	mm0, mm0, 0x55
-				pshufw	mm1, mm1, 0x55 //After:  mm0: [   ][   ][   ][a+b][   ][a+b][   ][a+b]
-				pmulhuw	mm0, mm5
-				pmulhuw	mm1, mm5
-				movq	kv6colmul[ecx], mm0
-				movq	kv6colmul[ecx-8], mm1
-				sub	ecx, 2*8
-				jnc short nolightb
-			}
-			#endif
-		}
-		//NOTE: emms not necessary!
-		#endif
 	}
 	else
 	{
