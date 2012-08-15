@@ -8699,147 +8699,19 @@ void drawtile (long tf, long tp, long tx, long ty, long tcx, long tcy,
 	}
 	else //Use alpha for masking
 	{
-		//Init for black/white code
-		#ifdef __GNUC__ //gcc inline asm
-		__asm__ __volatile__
-		(
-			".intel_syntax noprefix\n"
-			"pxor mm7, mm7\n"
-			"movd mm5, white\n"
-			"movd mm4, black\n"
-			"punpcklbw mm5, mm7\n"   //mm5: [00Wa00Wr00Wg00Wb]
-			"punpcklbw mm4, mm7\n"   //mm4: [00Ba00Br00Bg00Bb]
-			"psubw mm5, mm4\n"       //mm5: each word range: -255 to 255
-			"movq mm0, mm5\n"        //if (? == -255) ? = -256;
-			"movq mm1, mm5\n"        //if (? ==  255) ? =  256;
-			"pcmpeqw mm0, mskp255\n" //if (mm0.w[#] == 0x00ff) mm0.w[#] = 0xffff
-			"pcmpeqw mm1, mskn255\n" //if (mm1.w[#] == 0xff01) mm1.w[#] = 0xffff
-			"psubw mm5, mm0\n"
-			"paddw mm5, mm1\n"
-			"psllw mm5, 4\n"         //mm5: [-WBa-WBr-WBg-WBb]
-			"movq mm6, rgbmask64\n"
-			".att_syntax prefix\n"
-		);
-		#endif
-		#ifdef _MSC_VER //msvc inline asm
-		_asm
-		{
-			pxor mm7, mm7
-			movd mm5, white
-			movd mm4, black
-			punpcklbw mm5, mm7   //mm5: [00Wa00Wr00Wg00Wb]
-			punpcklbw mm4, mm7   //mm4: [00Ba00Br00Bg00Bb]
-			psubw mm5, mm4       //mm5: each word range: -255 to 255
-			movq mm0, mm5        //if (? == -255) ? = -256;
-			movq mm1, mm5        //if (? ==  255) ? =  256;
-			pcmpeqw mm0, mskp255 //if (mm0.w[#] == 0x00ff) mm0.w[#] = 0xffff
-			pcmpeqw mm1, mskn255 //if (mm1.w[#] == 0xff01) mm1.w[#] = 0xffff
-			psubw mm5, mm0
-			paddw mm5, mm1
-			psllw mm5, 4         //mm5: [-WBa-WBr-WBg-WBb]
-			movq mm6, rgbmask64
-		}
-		#endif
 		for(y=y0,vv=y*vi+v;y<y1;y++,vv+=vi)
 		{
 			p = ylookup[y] + frameplace; j = (vv>>16)*tp + tf;
 			for(x=x0,uu=x*ui+u;x<x1;x++,uu+=ui)
 			{
 				i = *(long *)(((uu>>16)<<2) + j);
-
-				#ifdef NOASM
-				i.a = i.a*(white.a-black.a)/256 + black.a
-				i.r = i.r*(white.r-black.r)/256 + black.r
-				i.g = i.g*(white.g-black.g)/256 + black.g
-				i.b = i.b*(white.b-black.b)/256 + black.b
-				#else
-				#ifdef __GNUC__ //gcc inline asm
-				__asm__ __volatile__
-				(
-					".intel_syntax noprefix\n"
-					"movd mm0, i\n"           //mm1: [00000000AaRrGgBb]
-					"punpcklbw mm0, mm7\n"    //mm1: [00Aa00Rr00Gg00Bb]
-					"psllw mm0, 4\n"          //mm1: [0Aa00Rr00Gg00Bb0]
-					"pmulhw mm0, mm5\n"       //mm1: [--Aa--Rr--Gg--Bb]
-					"paddw mm0, mm4\n"        //mm1: [00Aa00Rr00Gg00Bb]
-					"movq mm1, mm0\n"
-					"packuswb mm0, mm0\n"     //mm1: [AaRrGgBbAaRrGgBb]
-					"movd i, mm0\n"
-					".att_syntax prefix\n"
-				);
-				#endif
-				#ifdef _MSC_VER //msvc inline asm
-				_asm
-				{
-					movd mm0, i           //mm1: [00000000AaRrGgBb]
-					punpcklbw mm0, mm7    //mm1: [00Aa00Rr00Gg00Bb]
-					psllw mm0, 4          //mm1: [0Aa00Rr00Gg00Bb0]
-					pmulhw mm0, mm5       //mm1: [--Aa--Rr--Gg--Bb]
-					paddw mm0, mm4        //mm1: [00Aa00Rr00Gg00Bb]
-					movq mm1, mm0
-					packuswb mm0, mm0     //mm1: [AaRrGgBbAaRrGgBb]
-					movd i, mm0
-				}
-				#endif
-				#endif
-
-					//a = (((unsigned long)i)>>24);
-					//if (!a) continue;
-					//if (a == 255) { *(long *)((x<<2)+p) = i; continue; }
-				if ((unsigned long)(i+0x1000000) < 0x2000000)
-				{
-					if (i < 0) *(long *)((x<<2)+p) = i;
-					continue;
-				}
-				#ifdef __GNUC__ //gcc inline asm
-				__asm__ __volatile__
-				(
-					".intel_syntax noprefix\n"
-					"mov eax, x\n"            //mm0 = (mm1-mm0)*a + mm0
-					"mov edx, p\n"
-					"lea eax, [eax*4+edx]\n"
-					"movd mm0, [eax]\n"       //mm0: [00000000AaRrGgBb]
-					//"movd mm1, i\n"  	        //mm1: [00000000AaRrGgBb]
-					"pand mm0, mm6\n"         //zero alpha from screen pixel
-					"punpcklbw mm0, mm7\n"    //mm0: [00Aa00Rr00Gg00Bb]
-					//"punpcklbw mm1, mm7\n"    //mm1: [00Aa00Rr00Gg00Bb]
-					"psubw mm1, mm0\n"        //mm1: [--Aa--Rr--Gg--Bb] range:+-255
-					"psllw mm1, 4\n"          //mm1: [-Aa0-Rr0-Gg0-Bb0]
-					"pshufw mm2, mm1, 0xff\n" //mm2: [-Aa0-Aa0-Aa0-Aa0]
-					"pmulhw mm1, mm2\n"
-					//"mov edx, a\n"            //alphalookup[i] = i*0x001000100010;
-					//"pmulhw mm1, alphalookup[edx*8]\n"
-					"paddw mm0, mm1\n"
-					"packuswb mm0, mm0\n"
-					"movd [eax], mm0\n"
-					".att_syntax prefix\n"
-				);
-				#endif
-				#ifdef _MSC_VER //msvc inline asm
-				_asm
-				{
-					mov eax, x            //mm0 = (mm1-mm0)*a + mm0
-					mov edx, p
-					lea eax, [eax*4+edx]
-					movd mm0, [eax]       //mm0: [00000000AaRrGgBb]
-					//movd mm1, i  	        //mm1: [00000000AaRrGgBb]
-					pand mm0, mm6         //zero alpha from screen pixel
-					punpcklbw mm0, mm7    //mm0: [00Aa00Rr00Gg00Bb]
-					//punpcklbw mm1, mm7    //mm1: [00Aa00Rr00Gg00Bb]
-					psubw mm1, mm0        //mm1: [--Aa--Rr--Gg--Bb] range:+-255
-					psllw mm1, 4          //mm1: [-Aa0-Rr0-Gg0-Bb0]
-					pshufw mm2, mm1, 0xff //mm2: [-Aa0-Aa0-Aa0-Aa0]
-					pmulhw mm1, mm2
-					//mov edx, a            //alphalookup[i] = i*0x001000100010;
-					//pmulhw mm1, alphalookup[edx*8]
-					paddw mm0, mm1
-					packuswb mm0, mm0
-					movd [eax], mm0
-				}
-				#endif
+				
+				((short *)&i)[0] = ((short *)&i)[0] * (((short *)&white)[0] - ((short *)&black)[0])/256 + ((short *)&black)[0];
+				((short *)&i)[1] = ((short *)&i)[1] * (((short *)&white)[1] - ((short *)&black)[1])/256 + ((short *)&black)[1];
+				((short *)&i)[2] = ((short *)&i)[2] * (((short *)&white)[2] - ((short *)&black)[2])/256 + ((short *)&black)[2];
+				((short *)&i)[3] = ((short *)&i)[3] * (((short *)&white)[3] - ((short *)&black)[3])/256 + ((short *)&black)[3];
 			}
 		}
-		clearMMX();
 	}
 }
 /**
