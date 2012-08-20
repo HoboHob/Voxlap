@@ -9996,493 +9996,53 @@ static void updatereflects (vx5sprite *spr)
 
 static inline void movps (point4d *dest, point4d *src)
 {
-	#ifdef NOASM
 	*dest = *src;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		""
-		: "=x" (dest->vec)
-		:  "0" (src->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, src
-		movaps	xmm7, [eax]
-		mov	eax, dest
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void intss (point4d *dest, long src)
 {
-	#ifdef NOASM
 	dest->x = dest->y = dest->z = dest->z2 = (float)src;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax prefix\n"
-		"cvtsi2ss	%[dest], %[src]\n"
-		"shufps	%[dest], %[dest], 0\n"
-		".att_syntax prefix\n"
-		: [dest] "=x" (dest->vec)
-		: [src]   "g" (src)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, dest
-		cvtsi2ss	xmm7, src
-		shufps	xmm7, xmm7, 0
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void addps (point4d *sum, point4d *a, point4d *b)
 {
-	#ifdef NOASM
 	sum->x  =  a->x  +  b->x;
 	sum->y  =  a->y  +  b->y;
 	sum->z  =  a->z  +  b->z;
 	sum->z2 =  a->z2 +  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax prefix\n"
-		"addps	%[a], %[b]\n"
-		".att_syntax prefix\n"
-		: [a] "=x" (sum->vec)
-		:      "0" (a->vec), [b] "x" (b->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movaps	xmm7, [eax]
-		mov	eax, b
-		addps	xmm7, [eax]
-		mov	eax, sum
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void mulps (point4d *sum, point4d *a, point4d *b)
 {
-	#ifdef NOASM
 	sum->x  =  a->x  *  b->x;
 	sum->y  =  a->y  *  b->y;
 	sum->z  =  a->z  *  b->z;
 	sum->z2 =  a->z2 *  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mulps	%[a], %[b]\n"
-		".att_syntax prefix\n"
-		: [a] "=x" (sum->vec)
-		:      "0" (a->vec), [b] "x" (b->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movaps	xmm7, [eax]
-		mov	eax, b
-		mulps	xmm7, [eax]
-		mov	eax, sum
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void subps (point4d *sum, point4d *a, point4d *b)
 {
-	#ifdef NOASM
 	sum->x  =  a->x  -  b->x;
 	sum->y  =  a->y  -  b->y;
 	sum->z  =  a->z  -  b->z;
 	sum->z2 =  a->z2 -  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"subps	%[a], %[b]\n"
-		".att_syntax prefix\n"
-		: [a] "=x" (sum->vec)
-		:      "0" (a->vec), [b] "x" (b->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movaps	xmm7, [eax]
-		mov	eax, b
-		subps	xmm7, [eax]
-		mov	eax, sum
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void minps (point4d *sum, point4d *a, point4d *b)
 {
-	#ifdef NOASM
 	sum->x  =  MIN(a->x,  b->x);
 	sum->y  =  MIN(a->y,  b->y);
 	sum->z  =  MIN(a->z,  b->z);
 	sum->z2 =  MIN(a->z2, b->z2);
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"minps	%[a], %[b]\n"
-		".att_syntax prefix\n"
-		: [a] "=x" (sum->vec)
-		:      "0" (a->vec), [b] "x" (b->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movaps	xmm7, [eax]
-		mov	eax, b
-		minps	xmm7, [eax]
-		mov	eax, sum
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
 }
 
 static inline void maxps (point4d *sum, point4d *a, point4d *b)
 {
-	#ifdef NOASM
 	sum->x  =  MAX(a->x,  b->x);
 	sum->y  =  MAX(a->y,  b->y);
 	sum->z  =  MAX(a->z,  b->z);
 	sum->z2 =  MAX(a->z2, b->z2);
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-		__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"maxps	%[a], %[b]\n"
-		".att_syntax prefix\n"
-		: [a] "=x" (sum->vec)
-		:      "0" (a->vec), [b] "x" (b->vec)
-		:
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movaps	xmm7, [eax]
-		mov	eax, b
-		maxps	xmm7, [eax]
-		mov	eax, sum
-		movaps	[eax], xmm7
-	}
-	#endif
-	#endif
-}
 
-static inline void movps_3dn (point4d *dest, point4d *src)
-{
-	#ifdef NOASM
-	*dest = *src;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-		__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, src\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, dest\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-
-	_asm
-	{
-		mov	eax, src
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, dest
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
-}
-
-static inline void intss_3dn (point4d *dest, long src)
-{
-	#ifdef NOASM
-	dest->x = dest->y = dest->z = dest->z2 = (float)src;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, dest\n"
-		"movd	mm0, src\n"
-		"pi2fd	mm0, mm0\n"
-		"punpckldq	mm0, mm0\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm0\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-
-	_asm
-	{
-		mov	eax, dest
-		movd	mm0, src
-		pi2fd	mm0, mm0
-		punpckldq	mm0, mm0
-		movq	[eax], mm0
-		movq	[eax+8], mm0
-	}
-	#endif
-	#endif
-}
-
-static inline void addps_3dn (point4d *sum, point4d *a, point4d *b)
-{
-	#ifdef NOASM
-	sum->x  =  a->x  +  b->x;
-	sum->y  =  a->y  +  b->y;
-	sum->z  =  a->z  +  b->z;
-	sum->z2 =  a->z2 +  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, a\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, b\n"
-		"pfadd	mm0, [eax]\n"
-		"pfadd	mm1, [eax+8]\n"
-		"mov	eax, sum\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, b
-		pfadd	mm0, [eax]
-		pfadd	mm1, [eax+8]
-		mov	eax, sum
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
-}
-
-static inline void mulps_3dn (point4d *sum, point4d *a, point4d *b)
-{
-	#ifdef NOASM
-	sum->x  =  a->x  *  b->x;
-	sum->y  =  a->y  *  b->y;
-	sum->z  =  a->z  *  b->z;
-	sum->z2 =  a->z2 *  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, a\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, b\n"
-		"pfmul	mm0, [eax]\n"
-		"pfmul	mm1, [eax+8]\n"
-		"mov	eax, sum\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, b
-		pfmul	mm0, [eax]
-		pfmul	mm1, [eax+8]
-		mov	eax, sum
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
-}
-
-static inline void subps_3dn (point4d *sum, point4d *a, point4d *b)
-{
-	#ifdef NOASM
-	sum->x  =  a->x  -  b->x;
-	sum->y  =  a->y  -  b->y;
-	sum->z  =  a->z  -  b->z;
-	sum->z2 =  a->z2 -  b->z2;
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, a\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, b\n"
-		"pfsub	mm0, [eax]\n"
-		"pfsub	mm1, [eax+8]\n"
-		"mov	eax, sum\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, b
-		pfsub	mm0, [eax]
-		pfsub	mm1, [eax+8]
-		mov	eax, sum
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
-}
-
-static inline void minps_3dn (point4d *sum, point4d *a, point4d *b)
-{
-	#ifdef NOASM
-	sum->x  =  MIN(a->x,  b->x);
-	sum->y  =  MIN(a->y,  b->y);
-	sum->z  =  MIN(a->z,  b->z);
-	sum->z2 =  MIN(a->z2, b->z2);
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, a\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, b\n"
-		"pfmin	mm0, [eax]\n"
-		"pfmin	mm1, [eax+8]\n"
-		"mov	eax, sum\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, b
-		pfmin	mm0, [eax]
-		pfmin	mm1, [eax+8]
-		mov	eax, sum
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
-}
-
-static inline void maxps_3dn (point4d *sum, point4d *a, point4d *b)
-{
-	#ifdef NOASM
-	sum->x  =  MAX(a->x,  b->x);
-	sum->y  =  MAX(a->y,  b->y);
-	sum->z  =  MAX(a->z,  b->z);
-	sum->z2 =  MAX(a->z2, b->z2);
-	#else
-	#ifdef __GNUC__ //gcc inline asm
-	__asm__ __volatile__
-	(
-		".intel_syntax noprefix\n"
-		"mov	eax, a\n"
-		"movq	mm0, [eax]\n"
-		"movq	mm1, [eax+8]\n"
-		"mov	eax, b\n"
-		"pfmax	mm0, [eax]\n"
-		"pfmax	mm1, [eax+8]\n"
-		"mov	eax, sum\n"
-		"movq	[eax], mm0\n"
-		"movq	[eax+8], mm1\n"
-		".att_syntax prefix\n"
-	);
-	#endif
-	#ifdef _MSC_VER //msvc inline asm
-	_asm
-	{
-		mov	eax, a
-		movq	mm0, [eax]
-		movq	mm1, [eax+8]
-		mov	eax, b
-		pfmax	mm0, [eax]
-		pfmax	mm1, [eax+8]
-		mov	eax, sum
-		movq	[eax], mm0
-		movq	[eax+8], mm1
-	}
-	#endif
-	#endif
 }
 
 #define DRAWBOUNDCUBELINE(const) \
