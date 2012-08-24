@@ -1385,8 +1385,6 @@ void setflash (float px, float py, float pz, long flashradius, long numang, long
 
 	for(i=0;i<numang;i++)
 	{
-		clearMMX();
-
 		fcossin(((float)i+(float)angoff*.125f)*PI*2.0f/(float)numang,&vx,&vy);
 
 		ftol(FPREC/fabs(vx),&gdz[0]);
@@ -1507,7 +1505,6 @@ fafterdelete:;
 fcontinue:;
 	}
 
-	clearMMX();
 	updatebbox(vx5.minx,vx5.miny,vx5.minz,vx5.maxx,vx5.maxy,vx5.maxz,0);
 	return;
 
