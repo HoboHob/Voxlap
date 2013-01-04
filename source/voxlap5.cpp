@@ -6718,10 +6718,10 @@ void drawtile (long tf, long tp, long tx, long ty, long tcx, long tcy,
 			{
 				i = *(long *)(((uu>>16)<<2) + j);
 				
-				((short *)&i)[0] = ((short *)&i)[0] * (((short *)&white)[0] - ((short *)&black)[0])/256 + ((short *)&black)[0];
-				((short *)&i)[1] = ((short *)&i)[1] * (((short *)&white)[1] - ((short *)&black)[1])/256 + ((short *)&black)[1];
-				((short *)&i)[2] = ((short *)&i)[2] * (((short *)&white)[2] - ((short *)&black)[2])/256 + ((short *)&black)[2];
-				((short *)&i)[3] = ((short *)&i)[3] * (((short *)&white)[3] - ((short *)&black)[3])/256 + ((short *)&black)[3];
+				((uint8_t *)&i)[0] = ((uint8_t *)&i)[0] * (((uint8_t *)&white)[0] - ((uint8_t *)&black)[0])/256 + ((uint8_t *)&black)[0];
+				((uint8_t *)&i)[1] = ((uint8_t *)&i)[1] * (((uint8_t *)&white)[1] - ((uint8_t *)&black)[1])/256 + ((uint8_t *)&black)[1];
+				((uint8_t *)&i)[2] = ((uint8_t *)&i)[2] * (((uint8_t *)&white)[2] - ((uint8_t *)&black)[2])/256 + ((uint8_t *)&black)[2];
+				((uint8_t *)&i)[3] = ((uint8_t *)&i)[3] * (((uint8_t *)&white)[3] - ((uint8_t *)&black)[3])/256 + ((uint8_t *)&black)[3];
 			}
 		}
 	}
